@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Project In Django Ajax</title>
+
+    <!-- Bootstrap and CSS -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous"> 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: #f8f9fa; /* Light gray background */
+            color: #333; /* Dark text color */
+        }
+        .container {
+            background-color: #fff; /* White background */
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 50px;
+        }
+        .table th, .table td {
+            vertical-align: middle; /* Align table cell content vertically centered */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="text-center alert alert-secondary">CRUD Project In Django Ajax</h2>
+        <div class="row">
+            <div class="col-sm-4">
+                <h4 class="text-center alert alert-dark">Add/Update Details</h4>
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="personid" id="prsnid"/>
+                    {{ form.as_p }}
+                    <input type="button" class="btn btn-outline-dark w-100" id="btnsave" value="Save"/>
+                </form>
+            </div>
+            <div class="col-sm-8">
+                <h4 class="text-center alert alert-dark">Show Details</h4>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Password</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                        {% for i in dtls %}
+                        <tr>
+                            <td>{{ i.id }}</td>
+                            <td>{{ i.name }}</td>
+                            <td>{{ i.email }}</td>
+                            <td>{{ i.password }}</td>
+                            <td>
+                                <input type="button" value="Edit" data-sid="{{ i.id }}" class="btn btn-outline-dark btn-edit"/>
+                                <input type="button" value="Delete" data-sid="{{ i.id }}" class="btn btn-outline-dark btn-del"/>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        //......*INSERT  DATA *.........
+        $("#btnsave").click(function(){
+            console.log("save button clicked")
+            output = "";
+            let pnid = $("#prsnid").val();
+            let nm = $("#nameid").val();
+            let em = $("#emailid").val(); 
+            let pw = $("#passwordid").val();
+            if(nm == ""){
+                console.log("please enter a name")
+            } else if(em == ""){
+                console.log("please enter a email")
+            } else if(pw == ""){
+                console.log("please enter a password")
+            } else{
+                //console.log(nm);
+                //console.log(em);
+                //console.log(pw);
+                mydata = { personid:pnid, name:nm, email:em, password:pw };
+                $.ajax({
+                    url : "{% url 'add_data' %}",
+                    method : "POST",
+                    data : mydata,
+                    dataType : "json",   //--->for show
+                    success : function(data){
+                        console.log(data);
+                        a = data.x_data
+                        if(data.terms == "add"){
+                            console.log("form submission success");
+                            //console.log(data.x_data)
+                            //console.log(x)
+                            for (i=0;i<a.length;i++){
+                                output += "<tr><td>" + a[i].id + 
+                                            "</td><td>"+ a[i].name + 
+                                            "</td><td>" + a[i].email + 
+                                            "</td><td>"+ a[i].password +
+                                "</td><td> <input type='button' value='Edit' data-sid="+ a[i].id +
+                                " class='btn btn-outline-info btn-edit'> <input type='button' value='Delete' data-sid="
+                                + a[i].id +" class='btn btn-outline-danger btn-del'>";
+                            }
+                            //$("#tbody").html=output;  --->submit and show data after reload page
+                            $("#tbody").html(output);  //--->submit and show data without page reload
+                            $("#prsnid").val();
+                            $("form")[0].reset();
+                        }
+                        if(data.terms == 0){
+                            console.log("Failed")
+                            $("#prsnid").val();
+                            $("form")[0].reset();
+                        }
+                    },
+                });
+            }
+        });
+
+        //......*DELETE DATA*......
+        $("tbody").on("click",".btn-del",function(){
+            console.log("Clicked dlt btn");
+            let id=$(this).attr("data-sid");
+            console.log(id)
+            mydata = {pid : id}
+            mythis = this;
+            $.ajax({
+                url : "{% url 'delete_data' %}",
+                method : "POST",
+                data : mydata,
+                success : function(data){
+                    console.log(data);
+                    if(data.status == 1){
+                        console.log("dlt success");
+                        //$(this).closest("tr").fadeOut();  -->data dlted with page reloading
+                        $(mythis).closest("tr").fadeOut();  //-->data dlted without page reloading..
+                    }
+                    if(data.status == 0){
+                        console.log("unsuccess");
+                    }
+                },
+            });
+        });
+
+        //....*EDIT DATA*...
+        $("tbody").on("click",".btn-edit",function(){
+            console.log("Clicked edit btn");
+            let id=$(this).attr("data-sid");
+            
+            console.log(id)
+            mydata = {pid : id}
+            $.ajax({
+                url : "{% url 'edit_data' %}",
+                method : "POST",
+                data : mydata,
+                dataType : "Json",
+                success : function(data){
+                    console.log(data);
+                    $("#prsnid").val(data.id);
+                    $("#nameid").val(data.name);
+                    $("#emailid").val(data.email);
+                    $("#passwordid").val(data.password);
+                },
+            });
+        });
+    </script>
+</body>
+</html>
