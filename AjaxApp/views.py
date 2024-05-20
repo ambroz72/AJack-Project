@@ -13,24 +13,6 @@ def home(request):
     #context={'form':form}
     return render(request,'home.html',context)
 
-# @csrf_exempt
-# def add_data(request):
-#     if request.method == "POST":
-#         form = PersonRegistration(request.POST)
-#         if form.is_valid():
-#             name = request.POST['name']
-#             email = request.POST['email']
-#             password = request.POST['password']
-#             prsn = person(name=name,email=email,password=password)
-#             prsn.save()
-#             x = person.objects.values()
-#             print(x)
-#             x_data = list(x)
-#             print("---")
-#             print(x_data)
-#             return JsonResponse({'terms':'add','x_data':x_data})
-#         else:
-#             return JsonResponse({'terms':0})
 
 #....ADD and UPDATE ..
 @csrf_exempt
